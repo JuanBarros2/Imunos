@@ -23,10 +23,21 @@ public class Antigeno {
 	private boolean moved;
 	private int energia;
 
+	private static int remainingAmount;// Indicates the remaining amount of
+										// Antigenos in the context.
+
 	public Antigeno(ContinuousSpace<Object> space, Grid<Object> grid) {
 		this.space = space;// variaveis grid e space
 		this.grid = grid;
 		energia = 2;
+	}
+
+	public static void setRemainingAmount(int newAmount) {
+		remainingAmount = newAmount;
+	}
+
+	public static int getRemainingAmount() {
+		return remainingAmount;
 	}
 
 	@ScheduledMethod(start = 1, interval = 10)
@@ -63,24 +74,39 @@ public class Antigeno {
 
 	public void infect() {
 		GridPoint pt = grid.getLocation(this);
-		List<Object> neutrofilo = new ArrayList<Object>();
+		List<Object> neutrofiloList = new ArrayList<Object>();
+
 		for (Object obj : grid.getObjectsAt(pt.getX(), pt.getY())) {
 			if (obj instanceof Neutrofilo) {
-				neutrofilo.add(obj);
+				neutrofiloList.add(obj);
 			}
 		}
-		if (neutrofilo.size() > 0) {
-			int index = RandomHelper.nextIntFromTo(0, neutrofilo.size() - 1);
-			Neutrofilo obj = (Neutrofilo) neutrofilo.get(index);
-			NdPoint spacePt = space.getLocation(obj);
-			Context<Object> context = ContextUtils.getContext(obj);
-			obj.setEnergia();
-			if (obj.getEnergia() == 0) {
-				context.remove(obj);
+
+		if (neutrofiloList.size() > 0) {
+			int index = RandomHelper
+					.nextIntFromTo(0, neutrofiloList.size() - 1);
+			Neutrofilo neutrofiloVictim = (Neutrofilo) neutrofiloList
+					.get(index);
+
+			neutrofiloVictim.setEnergia(neutrofiloVictim.getEnergia() - 1);
+
+			if (neutrofiloVictim.getEnergia() == 0) {
+				NdPoint spacePt = space.getLocation(neutrofiloVictim);
+				Context<Object> context = ContextUtils
+						.getContext(neutrofiloVictim);
+				context.remove(neutrofiloVictim);
+
+				Neutrofilo
+						.setRemainingAmount(Neutrofilo.getRemainingAmount() - 1);
+
 				Antigeno novoAntigeno = new Antigeno(space, grid);
 				context.add(novoAntigeno);
+
+				remainingAmount++;
+
 				space.moveTo(novoAntigeno, spacePt.getX(), spacePt.getY());
 				grid.moveTo(novoAntigeno, pt.getX(), pt.getY());
+
 				Network<Object> net = (Network<Object>) context
 						.getProjection("infection network");
 				net.addEdge(this, novoAntigeno);
@@ -93,7 +119,7 @@ public class Antigeno {
 		return energia;
 	}
 
-	public void setEnergia() {
-		this.energia--;
+	public void setEnergia(int newEnergia) {
+		this.energia = newEnergia;
 	}
 }

@@ -28,22 +28,27 @@ public class Builder extends DefaultContext<Object> implements
 				"infection network", context, true);
 		netBuilder.buildNetwork();
 		context.setId("AplicacaoSimunos");
+		
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder
 				.createContinuousSpaceFactory(null);
 		ContinuousSpace<Object> space = spaceFactory.createContinuousSpace(
 				"space", context, new RandomCartesianAdder<Object>(),
 				new repast.simphony.space.continuous.WrapAroundBorders(), 50,
 				50);
+		
 		GridFactory gridFactory = GridFactoryFinder.createGridFactory(null);
 		Grid<Object> grid = gridFactory.createGrid("grid", context,
 				new GridBuilderParameters<Object>(new WrapAroundBorders(),
 						new SimpleGridAdder<Object>(), true, 50, 50));
 		
 		int antigenoCount = (Integer) par.getValue("antigeno");
+		Antigeno.setRemainingAmount(antigenoCount);
 		for (int i = 0; i < antigenoCount; i++) {
 			context.add(new Antigeno(space, grid));
 		}
+		
 		int neutrofiloCount = (Integer) par.getValue("neutrofilo");
+		Neutrofilo.setRemainingAmount(neutrofiloCount);
 		for (int i = 0; i < neutrofiloCount; i++) {
 			context.add(new Neutrofilo(space, grid));
 		}
